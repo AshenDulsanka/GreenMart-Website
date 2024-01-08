@@ -58,13 +58,6 @@
 		    .table td:not(:last-child) {
 		        padding-right: 15px; 
 		    }
-		    .d-flex {
-		        display: flex;
-		    }
-
-		    .justify-content-between {
-		        justify-content: space-between;
-		    }
 		</style>
 		
         <!--Favicon-->
@@ -79,9 +72,6 @@
 	            <div class="col-md-6">
 	                <h3 class="total-price">Total Price: $ ${ (total > 0) ? df.format(total) : 0 }</h3>
 	            </div>
-				<div class="col-md-6">
-		            <a class="btn btn-primary" href="index.jsp">Home</a>
-		        </div>
 		        <div class="col-md-6 d-flex justify-content-end">
 		        	<a class="btn btn-primary" href="cart-check-out?total=<%= total %>">Check Out</a>
 		        </div>
