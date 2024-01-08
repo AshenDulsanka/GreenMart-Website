@@ -1,0 +1,112 @@
+package com.greenmart.servlet;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.*;
+
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import com.greenmart.connection.dbCon;
+import com.greenmart.dao.*;
+import com.greenmart.model.*;
+
+@WebServlet("/cart-check-out")
+public class CheckOutServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		try(PrintWriter out = response.getWriter()){
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			Date date = new Date();
+			
+			ArrayList<CartModel> cart_list = (ArrayList<CartModel>) request.getSession().getAttribute("cart-list");
+			UserModel auth = (UserModel) request.getSession().getAttribute("auth");
+			
+			if(cart_list != null && auth != null) {
+				
+				for(CartModel c:cart_list) {
+					OrderModel order = new OrderModel();
+					order.setProductID(c.getProductID());
+					order.setCustID(auth.getCustID());
+					order.setQuantity(c.getQuantity());
+					order.setDate(formatter.format(date));
+					order.setAmount(c.getPrice());
+					
+					orderDao oDao = new orderDao(dbCon.getConnection());
+					boolean result = oDao.insertOrder(order);
+					
+					if(!result) break;
+				}
+				
+				cart_list.clear();
+				response.sendRedirect("paypalCheckout.jsp");
+				
+			} else {
+				if (auth == null) {
+					response.sendRedirect("login.jsp");
+				} else {
+					response.sendRedirect("ShoppingCart.jsp");
+				}
+			}
+			
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		doGet(request, response);
+		
+		String email = request.getParameter("email");
+		RequestDispatcher dispatcher = null;
+		HttpSession mySession = request.getSession();
+		
+		if(email!=null || !email.equals("")) {
+
+			String to = email;
+			
+			Properties props = new Properties();
+			props.put("mail.smtp.host", "smtp.gmail.com");
+			props.put("mail.smtp.socketFactory.port", "465");
+			props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+			props.put("mail.smtp.auth", "true");
+			props.put("mail.smtp.port", "465");
+			Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication("greenmartlankan@gmail.com", "hsypvvqmibxqwhzo");
+				}
+			});
+			
+			try {
+				MimeMessage message = new MimeMessage(session);
+				message.setFrom(new InternetAddress(email));
+				message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+				message.setSubject("Your Password Reset Key is Here!");
+				message.setText("Your purchase is completed");
+				Transport.send(message);
+				System.out.println("message sent successfully");
+			}
+
+			catch (MessagingException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+}

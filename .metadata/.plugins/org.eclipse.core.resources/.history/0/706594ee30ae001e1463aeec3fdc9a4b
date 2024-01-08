@@ -1,0 +1,67 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<%@page import = "java.text.*" %>
+<%@page import = "java.util.*" %>
+<%@page import = "com.greenmart.connection.*"%>
+<%@page import = "com.greenmart.model.*"%>
+<%@page import = "com.greenmart.dao.*"%>
+<%@page import = "com.greenmart.servlet.*"%>
+<%
+	ArrayList<CartModel> cart_list = (ArrayList<CartModel>) session.getAttribute("cart-list");
+	List<CartModel> cartProduct = null;
+	
+	double total = 0;
+	
+	if(cart_list != null){
+		productDao pDao = new productDao(dbCon.getConnection());
+		total = pDao.getTotalCartPrice(cart_list);
+		request.setAttribute("total", total);
+	}
+%>
+<!DOCTYPE html>
+<html>
+	<head>
+	    <title>PayPal Checkout</title>
+	    <style>
+	        body {
+	            font-family: Arial, sans-serif;
+	            text-align: center;
+	            margin: 50px;
+	        }
+	
+	        h1 {
+	            color: #007BFF;
+	        }
+	    </style>
+
+	    <script src="https://www.paypal.com/sdk/js?client-id=ASV5SyLF0tXQu9Q-YqKU1PVsqoZap1nvVwhPHzIz3pXk6-2rn1ctUdZx35j1d12ZO2QG9CBhtATtnpZN"></script>
+	</head>
+	
+	<body>
+	    <h1>Proceed to PayPal Checkout</h1>
+	    <div id="paypal-button-container"></div>
+	    
+	    <script>
+		    paypal.Buttons({
+		        createOrder: function(data, actions) {
+		            // This function sets up the details of the transaction.
+		            return actions.order.create({
+		                purchase_units: [{
+		                    amount: {
+		                        value: <%= String.format("%.2f", total)%>,
+                                currency_code: 'USD'
+		                    }
+		                }]
+		            });
+		        },
+		        onApprove: function(data, actions) {
+		            // This function captures the funds from the transaction.
+		            return actions.order.capture().then(function(details) {
+		                // Insert data into the database and redirect to success page.
+		                window.location.href = "success.jsp";
+		            });
+		        }
+		    }).render('#paypal-button-container');
+		</script>
+	</body>
+</html>

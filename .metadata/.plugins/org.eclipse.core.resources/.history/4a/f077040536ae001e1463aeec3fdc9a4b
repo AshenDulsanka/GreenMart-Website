@@ -1,0 +1,90 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<%@page import = "java.text.*" %>
+<%@page import = "java.util.*" %>
+<%@page import = "com.greenmart.connection.*"%>
+<%@page import = "com.greenmart.model.*"%>
+<%@page import = "com.greenmart.dao.*"%>
+<%@page import = "com.greenmart.servlet.*"%>
+<%
+	ArrayList<CartModel> cart_list = (ArrayList<CartModel>) session.getAttribute("cart-list");
+	List<CartModel> cartProduct = null;
+	
+	double total = 0;
+	
+	if(cart_list != null){
+		productDao pDao = new productDao(dbCon.getConnection());
+		total = pDao.getTotalCartPrice(cart_list);
+		request.setAttribute("total", total);
+	}
+%>
+<!DOCTYPE html>
+<html>
+	<head>
+	    <title>PayPal Checkout</title>
+	    <style>
+	        body {
+	            font-family: Arial, sans-serif;
+	            text-align: center;
+	            margin: 50px;
+	        }
+	
+	        h1 {
+	            color: #007BFF;
+	        }
+	    </style>
+
+	    
+	</head>
+	
+	<body>
+	    <h1>Proceed to PayPal Checkout</h1>
+	    <div id="paypal-button-container"></div>
+	    
+	    <script>
+	        paypal.Buttons({
+	        	createOrder: function (data, actions) {
+	        	    return actions.order.create({
+	        	        purchase_units: [{
+	        	            amount: {
+	        	                value: <%= String.format("%.2f", total)%>,
+	        	                currency_code: 'USD'
+	        	            }
+	        	        }]
+	        	    });
+	        	},
+
+	        	onApprove: function (data, actions) {
+	        		console.log('Data received from PayPal:', data);
+	        		
+	        	    return actions.order.capture().then(function (details) {
+	        	        fetch('/cart-check-out', {
+	        	            method: 'POST',
+	        	            headers: {
+	        	                'Content-Type': 'application/json'
+	        	            },
+	        	            body: JSON.stringify({
+	        	                paymentID: details.id
+	        	            })
+	        	        })
+	        	        .then(response => {
+						    if (!response.ok) {
+						        throw new Error('Network response was not ok');
+						    }
+						    return response.json();
+						})
+	        	        .then(data => {
+	        	        	console.log('Data received from PayPal:', data);
+	        	            if (data.success) {
+	        	                window.location.href = 'success.jsp';
+	        	            } else {
+	        	            	const errorMessage = data.error || 'Unknown error';
+	        	            	alert('Payment failed: ' + errorMessage);
+	        	            }
+	        	        })
+	        	    });
+	        	}
+	        }).render('#paypal-button-container');
+    	</script>
+	</body>
+</html>

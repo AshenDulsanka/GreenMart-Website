@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.greenmart.model.CartModel"/>
+    <fullyQualifiedTypeName name="com.greenmart.connection.dbCon"/>
+    <fullyQualifiedTypeName name="com.greenmart.dao.orderDao"/>
+    <fullyQualifiedTypeName name="com.greenmart.dao.userDao"/>
+    <fullyQualifiedTypeName name="com.greenmart.model.UserModel"/>
+    <fullyQualifiedTypeName name="java.io.PrintWriter"/>
+</qualifiedTypeNameHistroy>

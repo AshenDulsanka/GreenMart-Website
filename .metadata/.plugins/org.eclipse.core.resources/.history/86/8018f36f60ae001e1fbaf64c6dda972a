@@ -1,0 +1,104 @@
+<%@page import = "java.text.*" %>
+<%@page import = "java.util.*" %>
+<%@page import = "com.greenmart.connection.*"%>
+<%@page import = "com.greenmart.model.*"%>
+<%@page import = "com.greenmart.dao.*"%>
+<%@page language = "java" contentType="text/html; charset=ISO-8859-1" pageEncoding = "ISO-8859-1"%>
+<%
+	DecimalFormat df = new DecimalFormat("#.##");
+	request.setAttribute("df", df);
+
+	UserModel auth = (UserModel) request.getSession().getAttribute("auth");
+	if (auth != null){
+		request.setAttribute("auth", auth);
+	}
+	
+	double total = 0;
+
+	// Retrieve total from session attribute
+	Object totalAttribute = session.getAttribute("cart-total");
+	if (totalAttribute != null) {
+	    total = (Double) totalAttribute;
+	}
+	
+	ArrayList<CartModel> cart_list = (ArrayList<CartModel>) session.getAttribute("cart-list");
+	List<CartModel> cartProduct = null;
+	if(cart_list != null){
+		productDao pDao = new productDao(dbCon.getConnection());
+		cartProduct = pDao.getCartProducts(cart_list);
+		request.setAttribute("cart_list", cart_list);
+		request.setAttribute("total", total);
+	}
+%>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	    <title>PayPal Checkout</title>
+	    
+	    <!-- Bootstrap CSS -->
+	    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	    
+	    <script src="https://www.paypal.com/sdk/js?client-id=ASV5SyLF0tXQu9Q-YqKU1PVsqoZap1nvVwhPHzIz3pXk6-2rn1ctUdZx35j1d12ZO2QG9CBhtATtnpZN"></script>
+	    
+	    <style type="text/css">
+	        body {
+	            font-family: Arial, sans-serif;
+	            text-align: center;
+	            padding-top: 10%;
+	            margin: 50px;
+	        }
+	
+	        h1 {
+	            color: #007BFF;
+	        }
+	
+	        .paypal-container {
+	            margin-top: 20px;
+	            padding-top: 30%;
+	        }
+	    </style>
+	    
+	    <!-- Favicon -->
+	    <link rel="icon" type="image/x-icon" href="images/favicon.ico" />
+	</head>
+	
+	<body>
+		
+		<div class="container">
+		    <div class="row justify-content-center">
+		        <div class="col-md-8">
+		            <h1>Proceed to PayPal Checkout</h1>
+		            <h2>Total Price: $ ${ (total > 0) ? df.format(total) : 0 }</h2>
+		            <div id="paypal-button-container" class="paypal-container"></div>
+		        </div>
+		    </div>
+		</div>
+		
+		<!-- Bootstrap JS and Popper.js -->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+		
+		<script>
+		    paypal.Buttons({
+		        createOrder: function(data, actions) {
+		            return actions.order.create({
+		                purchase_units: [{
+		                    amount: {
+		                        value: <%= String.format("%.2f", total)%>,
+		                        currency_code: 'USD'
+		                    }
+		                }]
+		            });
+		        },
+		        onApprove: function(data, actions) {
+		            return actions.order.capture().then(function(details) {
+		                window.location.href = "success.jsp";
+		            });
+		        }
+		    }).render('#paypal-button-container');
+		</script>
+	</body>
+</html>

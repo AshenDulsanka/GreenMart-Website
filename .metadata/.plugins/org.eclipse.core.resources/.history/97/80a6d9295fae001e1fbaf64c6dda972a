@@ -1,0 +1,86 @@
+<%@page import="java.text.*"%>
+<%@page import="java.util.*"%>
+<%@page import="com.greenmart.connection.*"%>
+<%@page import="com.greenmart.model.*"%>
+<%@page import="com.greenmart.dao.*"%>
+<%@page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Checkout</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=ASV5SyLF0tXQu9Q-YqKU1PVsqoZap1nvVwhPHzIz3pXk6-2rn1ctUdZx35j1d12ZO2QG9CBhtATtnpZN"></script>
+
+    <!-- Custom CSS -->
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        h1 {
+            color: #007BFF;
+        }
+
+        .paypal-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Proceed to PayPal Checkout</h1>
+        <h2>Total Price: $ ${ (total > 0) ? df.format(total) : 0 }</h2>
+        <div id="paypal-button-container" class="paypal-container"></div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Center the PayPal button
+        function centerPaypalButton() {
+            var containerHeight = document.querySelector('.paypal-container').clientHeight;
+            var buttonHeight = document.querySelector('#paypal-button-container').clientHeight;
+            var marginTop = (containerHeight - buttonHeight) / 2;
+            document.querySelector('#paypal-button-container').style.marginTop = marginTop + 'px';
+        }
+
+        paypal.Buttons({
+            createOrder: function (data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: <%= String.format("%.2f", total)%>,
+                            currency_code: 'USD'
+                        }
+                    }]
+                });
+            },
+            onApprove: function (data, actions) {
+                return actions.order.capture().then(function (details) {
+                    window.location.href = "success.jsp";
+                });
+            }
+        }).render('#paypal-button-container');
+
+        // Center the PayPal button on window resize
+        window.addEventListener('resize', centerPaypalButton);
+        // Center the PayPal button initially
+        centerPaypalButton();
+    </script>
+</body>
+
+</html>
