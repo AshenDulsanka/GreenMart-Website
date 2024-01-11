@@ -80,15 +80,15 @@ public class CheckOutServlet extends HttpServlet {
 	private void sendEmail(String userEmail, ArrayList<CartModel> cartList, double total, UserModel auth) {
 		DecimalFormat df = new DecimalFormat("#.##");
 	    // Sender's email and password
-	    final String username = "greenmartlankan@gmail.com"; // Replace with your email
-	    final String password = "ruzh ajne ddzv iswc"; // Replace with your email password
+	    final String username = "greenmartlankan@gmail.com"; 
+	    final String password = "ruzh ajne ddzv iswc"; 
 
 	    // SMTP server properties
 	    Properties props = new Properties();
 	    props.put("mail.smtp.auth", "true");
 	    props.put("mail.smtp.starttls.enable", "true");
-	    props.put("mail.smtp.host", "smtp.gmail.com"); // Replace with your SMTP server
-	    props.put("mail.smtp.port", "587"); // Replace with your SMTP server port
+	    props.put("mail.smtp.host", "smtp.gmail.com"); 
+	    props.put("mail.smtp.port", "587"); 
 
 	    // Create a session with the SMTP server
 	    Session session = Session.getInstance(props, new Authenticator() {
